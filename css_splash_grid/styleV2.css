@@ -36,9 +36,16 @@ body {
     grid-template-columns: repeat(var(--columns), 1fr);
     grid-template-rows: repeat(var(--rows), 1fr);
 
+    z-index: 1;
 }
 
-
+.splash {
+    z-index: 2;
+    color: #fff;
+    text-align: center;
+    font: 40px;
+    margin: 0px;
+}
 
 .tile {
     position: relative;

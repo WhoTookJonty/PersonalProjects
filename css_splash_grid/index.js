@@ -3,17 +3,6 @@ let columns = Math.floor(document.body.clientWidth / 50),
     
 const wrapper = document.getElementById("tiles");
 
-/* Used in styleV1.css
-const colors = [
-    "rgb(229, 57, 53)",
-    "rgb(253, 216, 53)",
-    "rgb(244, 81, 30)",
-    "rgb(76, 175, 80)",
-    "rgb(33, 150, 243)",
-    "rgb(156, 39, 176)"
-];
-let count = -1;
-*/
 
 
 
@@ -21,18 +10,13 @@ let toggled = false;
 
 const handleOnClick = index => 
 {
-    /* Used in styleV1.css
-    count = count + 1;
-    */
+
    toggled = !toggled;
 
-   document.body.classList.toggle("toggled"); //not working yet
+   //document.body.classList.toggle("toggled"); //not working yet
 
     anime({
         targets: ".tile",
-        /* Used in styleV1.css
-        backgroundColor: colors[count % (colors.length -1)],
-        */
        opacity: toggled ? 0 : 1,
         delay: anime.stagger(50, {
             grid: [columns, rows],
@@ -77,4 +61,5 @@ const createGrid = () =>
     createTiles(columns * rows);
 }
 
+window.onload = () => createGrid();
 window.onresize = () => createGrid();

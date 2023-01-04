@@ -13,6 +13,37 @@
     }
 }
 
+@keyframes fadeOut{
+    0%{
+      opacity: 1;
+      
+    }
+    50%{
+      opacity: 0.5;
+      
+    }
+    100%{
+      display: none;
+      opacity: 0;
+    }
+  }
+
+  @keyframes fadeIn{
+    0%{
+        display: block;
+        opacity: 0;
+      
+    }
+    50%{
+        opacity: 0.5;
+      
+    }
+    100%{
+         opacity: 1;
+    }
+  }
+
+
 body {
     animation: background-pan 10s linear infinite;
     background: linear-gradient(
@@ -31,7 +62,7 @@ body {
 #tiles {
     height: 100vh;
     width: 100vw;
-
+    
     display: grid;
     grid-template-columns: repeat(var(--columns), 1fr);
     grid-template-rows: repeat(var(--rows), 1fr);
@@ -39,12 +70,22 @@ body {
     z-index: 1;
 }
 
-.splash {
+#splash {
     z-index: 2;
     color: #fff;
     text-align: center;
-    font: 40px;
+    font-size: 80px;
     margin: 0px;
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, 0);
+}
+
+#splash:onclick{
+    animation-name: fadeOut;
+    animation-duration: 2000ms;
+    animation-fill-mode: forwards;
 }
 
 .tile {
@@ -60,7 +101,6 @@ body {
 
 }
 
-
-.tile:hover {
-    opacity: 0.70;
+.tile-active:hover {
+    opacity: 0.70 !important;
 }

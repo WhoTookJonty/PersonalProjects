@@ -3,8 +3,17 @@ let columns = Math.floor(document.body.clientWidth / 50),
     
 const wrapper = document.getElementById("tiles");
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
-
+/* Used in styleV1.css
+const colors = [
+    "rgb(229, 57, 53)",
+    "rgb(253, 216, 53)",
+    "rgb(244, 81, 30)",
+    "rgb(76, 175, 80)",
+    "rgb(33, 150, 243)",
+    "rgb(156, 39, 176)"
+];
+let count = -1;
+*/
 
 
 
@@ -12,44 +21,24 @@ let toggled = false;
 
 const handleOnClick = index => 
 {
-   let tile = document.getElementsByClassName("tile");
-   let splash = document.getElementById("splash");
-
+    /* Used in styleV1.css
+    count = count + 1;
+    */
    toggled = !toggled;
-  
-   for (let i = 0; i < tile.length; i++)
-   {
-        tile[i].classList.toggle("tile-active");
-   }
-   if (toggled == false){
-        splash.style.animationName = "fadeIn";
-        splash.style.animationDuration = "400ms";
-        splash.style.animationFillMode = "forwards";
-   }else{
-        splash.style.animationName = "fadeOut";
-        splash.style.animationDuration = "400ms";
-        splash.style.animationFillMode = "forwards";
-   }
-   
+
+   document.body.classList.toggle("toggled"); //not working yet
 
     anime({
         targets: ".tile",
-        opacity: toggled ? 0 : 1,
+        /* Used in styleV1.css
+        backgroundColor: colors[count % (colors.length -1)],
+        */
+       opacity: toggled ? 0 : 1,
         delay: anime.stagger(50, {
             grid: [columns, rows],
             from: index
         })
     });
-    
-    /*
-    const removeWrapper = async () => {
-        await delay(1000);
-        document.body.removeChild(wrapper);
-        document.body.removeChild(splash);
-        console.log("waited");
-    }
-    removeWrapper();
-    */
 }
 
 
@@ -59,7 +48,6 @@ const createTile = index =>
     const tile = document.createElement("div");
 
     tile.classList.add("tile");
-    tile.classList.add("tile-active");
 
     tile.onclick = e => handleOnClick(index);
     
@@ -89,5 +77,4 @@ const createGrid = () =>
     createTiles(columns * rows);
 }
 
-window.onload = () => createGrid();
 window.onresize = () => createGrid();

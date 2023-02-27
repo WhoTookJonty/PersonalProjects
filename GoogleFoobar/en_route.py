@@ -33,7 +33,7 @@ Output:
 
 ****************Notes****************
 Each >< collision = 2 salutes. The employees have to cross. Return number of crossings*2
-Positioning matters - e.g. if ><--> happens, the collision occurs before the third employee who is already leaving, so they dont collide
+Positioning matters - e.g. if ><--> happens, the collision occurs before the third employee who is already leaving, so they dont collide.
 Need to check if employees have already passed or not. 
 
 --- O(n) runtime - use searching algorithms to limit empty space "-" searching
@@ -46,7 +46,7 @@ def solution(s):
     leftBefore = 0
 
     for x in s:
-        if(x == '>'):
+        if x == '>':
             leftBefore += 1
         elif x == '<' and leftBefore > 0:
             collisions += leftBefore 

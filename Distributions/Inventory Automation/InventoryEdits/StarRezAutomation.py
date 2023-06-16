@@ -41,7 +41,10 @@ def clickImage(img):
             position = pt.locateCenterOnScreen(img, confidence=.80)
 
             if position is None:
-                print(f'{img} not found....')
+                #print(f'{img} not found....')
+                file = open(os.path.join(os.path.dirname(__file__), "log.txt"),"a")
+                file.write(f'{img} not found...\n')
+                file.close()
                 found = False
             else:
                 pt.moveTo(position, duration=.1)

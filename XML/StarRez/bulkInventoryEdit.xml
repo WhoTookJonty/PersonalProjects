@@ -1,0 +1,174 @@
+
+<!-- ****************************** NOTES *****************************
+
+PURPOSE: Use the Generic Table and Data Subs to Bulk Edit the RecordTypeEnum of a specified Inventory Item within a specified room space
+
+TABLES Being Used: GenericTableData, GenericTableDataField, RoomSpaceInventory, RoomSpace
+    
+GenericTableDefinitionFieldID: - 138=quantityEdited, 140=roomSpaceString, 139=inventoryTypeID, 142=RecordTypeEnum
+    These IDs are from the GenericTable Entry Fields themselves,
+    You can view them by going to Admin -> Generic Table and Field Definition -> BulkInventoryEdit
+    These IDs are related to each field that the user enters their specific values into. 
+
+
+The ID For this Generic Table is:
+[GenericTableData].GenericTableDefinitionID  = 23
+
+The Query For the RoomSpace (placed in 'ID Query' Field above where the code goes in the data sub):
+    SELECT RoomSpaceID FROM RoomSpace 
+    WHERE Description='{SELECT 
+    GenericTableDataField.ValueString FROM GenericTableData 
+    JOIN GenericTableDataField 
+    ON GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID 
+    WHERE GenericTableData.GenericTableDataID={NewData_GenericTableDataID} 
+    AND GenericTableDataField.GenericTableDefinitionFieldID=140}'
+
+
+********************* Table Layouts ***********************
+These table layouts were found by going into a new Data Sub, Select 'Insert Record'
+Select 'Update a Record on another Table', then Select the table you want to view, then click the 'Advanced' tab. 
+It will display the XML Format for each table
+
+
+<RoomSpace>
+  <RoomSpaceID>-1</RoomSpaceID>
+  <RoomBaseID>0</RoomBaseID>
+  <RoomSpaceTypeEnum>Bed</RoomSpaceTypeEnum>
+  <RecordTypeEnum>Normal</RecordTypeEnum>
+  <RoomID>0</RoomID>
+  <Description></Description>
+  <WebDescription></WebDescription>
+  <ExtensionID>0</ExtensionID>
+  <SortOrder>0</SortOrder>
+  <RoomRateID>0</RoomRateID>
+  <AllocateSortOrder>0</AllocateSortOrder>
+  <AllocateExclude>false</AllocateExclude>
+  <Hold>false</Hold>
+  <Networked>false</Networked>
+  <BedCapacity>1</BedCapacity>
+  <Bathrooms>0</Bathrooms>
+  <Street></Street>
+  <Street2></Street2>
+  <ZipPostcode></ZipPostcode>
+  <Comments></Comments>
+  <SecurityUserID>852</SecurityUserID>
+  <DateModified>2023-06-19T14:28:09.414266</DateModified>
+</RoomSpace>
+
+
+<RoomSpaceInventory>
+  <RoomSpaceInventoryID>-1</RoomSpaceInventoryID>
+  <RecordTypeEnum>Normal</RecordTypeEnum>
+  <RoomSpaceInventoryTypeID>0</RoomSpaceInventoryTypeID>
+  <RoomSpaceID>0</RoomSpaceID>
+  <RoomSpaceInventoryConditionID>0</RoomSpaceInventoryConditionID>
+  <RoomSpaceInventoryStatusID>0</RoomSpaceInventoryStatusID>
+  <Code></Code>
+  <Description></Description>
+  <Colour></Colour>
+  <ExpiryDate>2023-06-19T14:32:00</ExpiryDate>
+  <WarrantyDate />
+  <PurchaseDate>2023-06-19T14:32:00</PurchaseDate>
+  <PurchasePrice>0</PurchasePrice>
+  <PurchasePlace></PurchasePlace>
+  <PurchaseDetails></PurchaseDetails>
+  <BrandDetails></BrandDetails>
+  <Location></Location>
+  <HideFromResidents>false</HideFromResidents>
+  <Comments></Comments>
+  <DateModified>2023-06-19T14:32:12.0541586</DateModified>
+</RoomSpaceInventory>
+
+
+-->
+
+<RoomSpace>
+
+    <!-- PSEUDO CODE: 
+
+        FOR EACH NEW ITEM:
+            SELECT TOP {QuantityOfItems FROM GTD}  
+            RoomSpaceInventoryID 
+            WHERE {RoomSpace Name = GTD.RoomSpaceName} 
+            AND {InventoryTypeID = GTD.InventoryTypeID} 
+            AND {RecordTypeEnum is Normal} 
+            AND {RoomSpace Item name = GTD.ItemName}
+
+            MODIFY RoomSpaceInventory.InventoryID.RecordTypeEnum:
+                SELECT GTD.ValueInteger FROM GTD
+                WHERE GTD.ID = {Record Enum GTD Table (142)}
+        END
+
+
+    -->
+    {#EACH:
+
+    <!--
+        Grabs the quantity of new items inputted into the generic table using the definitionfieldID = 138. 
+        -->
+        SELECT TOP {SELECT 
+        GenericTableDataField.ValueInteger FROM 
+        GenericTableData JOIN GenericTableDataField ON
+        GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+        GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+        AND
+        GenericTableDataField.GenericTableDefinitionFieldID=138}
+
+    <!-- 
+        Gets RoomSpaceInventoryID through a series of AND statements
+        The SELECT statement retrieves the RoomSpace String
+        -->
+        RoomSpaceInventoryID FROM
+        RoomSpaceInventory JOIN RoomSpace 
+        WHERE RoomSpace.Description = '{SELECT
+        GenericTableDataField.ValueString FROM 
+        GenericTableData JOIN GenericTableDataField ON
+        GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+        GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+        AND
+        GenericTableDataField.GenericTableDefinitionFieldID=140}'
+
+    <!-- 
+        AND Compares RoomSpaceInventoryID to the GenericTable InventoryID 
+        -->
+        AND
+        RoomSpaceInventory.RoomSpaceInventoryTypeID={SELECT 
+        GenericTableDataField.ValueInteger FROM
+        GenericTableData JOIN GenericTableDataField ON
+        GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+        GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+        AND
+        GenericTableDataField.GenericTableDefinitionFieldID=139}
+
+    <!-- 
+        AND The RecordTypeEnum has to be 0 (which is 'Normal' in StarRez FROM RecordTypeEnum table)  
+        -->
+        AND 
+        RoomSpaceInventory.RecordTypeEnum=0
+
+    <!-- 
+        Finally, make sure the RoomSpaceInventory.Description is the same as the item name in the Generic Table (e.g. Box Spring, etc.)
+        -->
+        AND 
+        RoomSpaceInventory.Description = '{SELECT GenericTableData.Description FROM GenericTableData
+        WHERE GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} }'
+    } 
+    
+        <RoomSpaceInventory RoomSpaceInventoryID="{RoomSpaceInventoryID}"> <!-- HERE the RoomSpaceInventoryID retrieved earlier is used -->
+            <RecordTypeEnum>
+            <!-- 
+            SELECT RecordTypeEnum FROM GTD
+            -->
+                {
+                    SELECT
+                    GenericTableDataField.ValueString FROM
+                    GenericTableData JOIN GenericTableDataField ON
+                    GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+                    GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID}
+                    AND
+                    GenericTableDataField.GenericTableDefinitionFieldID=142
+                }
+            </RecordTypeEnum>
+        </RoomSpaceInventory>
+    {/EACH} 
+</RoomSpace>

@@ -1,0 +1,116 @@
+<!-- TABLES: GenericTableData, GenericTableDataField, RoomSpaceInventory, RoomSpace -->
+
+<!-- 
+    ValueInteger: used to acquire the number of items in the field within GenericTableDataField
+    GenericTableDefinitionFieldID: used to specify the right generic table within GenericTableDataField
+    GenericTableDefinitionID: Also specifies the right generic table within GenericTableData. 
+    
+    Note: GenericTableDefinitionFieldID - 128=quantitymoved, 129=roomSpaceMovingFrom, 127=inventoryTypeID, 130=RoomSpaceMovingTo
+          For some reason these different fields are only associated with these IDs
+-->
+
+<!-- 
+    [GenericTableData].GenericTableDefinitionID  = 20
+
+
+    SELECT RoomSpaceID FROM RoomSpace 
+    WHERE Description='{SELECT 
+    GenericTableDataField.ValueString FROM GenericTableData 
+    JOIN GenericTableDataField 
+    ON GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID 
+    WHERE GenericTableData.GenericTableDataID={NewData_GenericTableDataID} 
+    AND GenericTableDataField.GenericTableDefinitionFieldID=129}'
+-->
+
+<RoomSpace>
+
+    <!-- PSEUDO CODE: 
+
+        FOR EACH NEW ITEM:
+            SELECT TOP {QuantityOfItems FROM GTD}  
+            RoomSpaceInventoryID 
+            WHERE {RoomSpace Name = GTD.RoomSpace Moving Items From HERE} 
+            AND {InventoryTypeID = GTD.TypeID} 
+            AND {RecordTypeEnum is Normal} 
+            AND {RoomSpace Item name = GTD.Name}
+
+            MODIFY RoomSpaceInventory.RoomSpaceID:
+                SELECT RoomSpaceID FROM RoomSpace
+                WHERE Description = {GTD.RoomSpace Moving Items To HERE}
+        END
+
+
+    -->
+    {#EACH:
+
+    <!--
+        Grabs the quantity of new items inputted into the generic table using the definitionfieldID = 128. 
+        -->
+        SELECT TOP {SELECT 
+        GenericTableDataField.ValueInteger FROM 
+        GenericTableData JOIN GenericTableDataField ON
+        GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+        GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+        AND
+        GenericTableDataField.GenericTableDefinitionFieldID=128}
+
+    <!-- 
+        Gets RoomSpaceInventoryID through the RoomSpace Name in the generic table (127) USED IN LATER XML, NOT THIS SQL
+        -->
+        RoomSpaceInventoryID FROM
+        RoomSpaceInventory JOIN RoomSpace 
+        WHERE RoomSpace.Description = '{SELECT
+        GenericTableDataField.ValueString FROM 
+        GenericTableData JOIN GenericTableDataField ON
+        GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+        GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+        AND
+        GenericTableDataField.GenericTableDefinitionFieldID=129}'
+
+    <!-- 
+        Compares RoomSpaceInventoryID to the GenericTable inventoryTypeID (using value integer and the 127 generic table ID). 
+        -->
+        AND
+        RoomSpaceInventory.RoomSpaceInventoryTypeID={SELECT 
+        GenericTableDataField.ValueInteger FROM
+        GenericTableData JOIN GenericTableDataField ON
+        GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID WHERE
+        GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+        AND
+        GenericTableDataField.GenericTableDefinitionFieldID=127}
+
+    <!-- 
+        The RecordTypeEnum has to be 0 (which is 'Normal' in StarRez FROM RecordTypeEnum table)  
+        -->
+        AND 
+        RoomSpaceInventory.RecordTypeEnum=0
+
+    <!-- 
+        Finally, make sure the RoomSpaceInventory.Description is the same as the item name in the Generic Table (e.g. Box Spring, etc.)
+        -->
+        AND 
+        RoomSpaceInventory.Description = '{SELECT GenericTableData.Description FROM GenericTableData
+        WHERE GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} }'
+    } 
+    
+        <RoomSpaceInventory RoomSpaceInventoryID="{RoomSpaceInventoryID}"> <!-- HERE the RoomSpaceInventoryID retrieved earlier is used -->
+            <RoomSpaceID>
+            <!-- 
+            SELECT RoomSpaceID FROM RoomSpace
+            WHERE Description = {GTD.RoomSpace Moving Items To HERE}
+            -->
+                {
+                SELECT RoomSpaceID FROM RoomSpace 
+                WHERE Description='{SELECT
+                GenericTableDataField.ValueString FROM GenericTableData 
+                JOIN GenericTableDataField ON
+                GenericTableData.GenericTableDataID=GenericTableDataField.GenericTableDataID 
+                WHERE
+                GenericTableData.GenericTableDataID={#Parent.NewData_GenericTableDataID} 
+                AND
+                GenericTableDataField.GenericTableDefinitionFieldID=130}'
+                }
+            </RoomSpaceID>
+        </RoomSpaceInventory>
+    {/EACH} 
+</RoomSpace>

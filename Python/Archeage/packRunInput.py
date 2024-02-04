@@ -1,12 +1,13 @@
 import time
 from pynput import mouse, keyboard
 import os
+import pythonping as pyping
 
 #-------------TO DO--------------
 # 1. Rewrite the output file to where the K: line has the duration held on it as well [X]
 # 2. Rewrite the output file to also contain the time between button presses - e.g. K:a 2.56 2.43 [X]
 # 3. Make sure the packRunOutput file is made with multi threading for each button press, perhaps set a max num of threads,
-#    so that each button isnt waiting on the sleep function of other buttons []
+#    so that each button isnt waiting on the sleep function of other buttons [X]
 
 #-------------BUGS---------------
 # 1. <RESOLVED> [DOUBLE REGISTER OF KEY] For example, holding 'w' and then holding 'd', followed by releasing 'w' will make 'd' register as being pressed again,
@@ -49,22 +50,30 @@ def on_press(key):
     global filePath
     global startBetweenTime #keeps track of duration between key presses
     global endBetweenTime #same as above^
+    global serverIP
 
     try: #alphanumeric keys pressed
         if key.char not in heldKeyList: #if the key is being held, dont restart the time, or reprint it
-            endBetweenTime = time.time() #Get the time between the last time a button was pressed. The first time this occurs is a large number, ignore this - it will be handled in post
-            
+
+            #----------ALL Time variables need to be executed as soon as possible---------
+            endBetweenTime = time.time() #Get the time between the last time a button was pressed. The first time this occurs it is a very large number, ignore this - it will be handled in post
+            betweenTime = endBetweenTime - startBetweenTime
+            startBetweenTime = time.time() #start the clock for how long it has been since the last button press (needs to be placed)
+            startTimeDict[key.char] = time.time() #append new start time as a key-value pair. 
+            latency = pyping.ping(serverIP, count=1).rtt_avg_ms # retrieve server latency with one ping packet for how long it takes for the key to be registered as pressed    
+            #-----------------------------------------------------------------------------
+
             #Write to file the key pressed and duration since last key press
-            print('K:{0}'.format(key.char) + ' ' + str(endBetweenTime - startBetweenTime)) #using "K" to indicate a keyboard press
-            file = open(filePath,"a")
-            file.write('K:{0}'.format(key.char) + ' ' + str(endBetweenTime - startBetweenTime) +'\n')
+            heldKeyList.append(key.char)  #saves the last key pressed to the list
+            keyAndTime = 'K:{0}'.format(key.char) + ' ' + str(betweenTime) + ' ' + str(latency/1000) #using "K" to indicate a keyboard press
+            print(keyAndTime) 
+            file = open(filePath,"a") #append to file
+            file.write(keyAndTime +'\n')
             file.close()
             
-            startTimeDict[key.char] = time.time() #append new start time as a key-value pair.
-            heldKeyList.append(key.char)  #saves the last key pressed to the list
-            startBetweenTime = time.time() #start the clock for how long it has been since the last button press
-
-    except AttributeError: #special key pressed
+            
+    
+    except AttributeError: #special key pressed -------------NEEDS WORK--------------
 
         if '{0}'.format(key) not in heldKeyList:
             startTimeDict[key] = time.time() #append new start time as a key-value pair
@@ -77,13 +86,13 @@ def on_release(key):
     global startTimeDict
     global filePath
     global heldKeyList
-    # this is done because if you dbl press a button, with any amount of time between, it will register as a continuous hold, so you need to reset
-    try:
+    
+    try: # this is done because if you dbl press a button, with any amount of time between, it will register as a continuous hold, so you need to reset
         heldKeyList.remove(key.char)
     except AttributeError:
         heldKeyList.remove(key)
 
-    endTime = time.time() #get end result time
+    endTime = time.time() #get duration the key was pressed
     
     try: #alphanumeric key
         start = startTimeDict.get(key.char) #get the start time related to the key pressed and held from x amount of time ago
@@ -143,6 +152,8 @@ def editText():
 
     file.close()
 
+
+
 #****************************************************MAIN*********************************************************
 
 #----------Global Variables:--------------
@@ -152,7 +163,6 @@ k_listener = keyboard.Listener(
     on_release=on_release)
 k_listener.start()
 
-# ...or, in a non-blocking fashion:
 # m_listener = mouse.Listener(
 #     on_move=on_move,
 #     on_click=on_click,
@@ -170,19 +180,21 @@ global startTimeDict #keeps track of every start time by holding a key-value pai
                      #   where the key is the button pressed and the value is the time stamp
                      #   and this will remain unique via removing it once it's value is read. 
 startTimeDict = {}
-global heldKeyList
+global heldKeyList #Keeps track of all concurrently held down keys. Each held key, once released, is removed from this list. 
 heldKeyList = []
+global serverIP #ServerIP to test latency between key presses when interacting across the internet
+serverIP = "158.69.224.61"
 
 
 #-----------Start Recording--------------
 while k_listener.running:
     time.sleep(1)
 
-#m_listener.stop() #close the listeners
-k_listener.stop()
+#m_listener.stop()
+k_listener.stop() #close the listeners
 
 print("\n\n\n")
-editText() #Finalize the text file
+editText() #Reformat the outputted Text File
 
 
 

@@ -57,13 +57,6 @@ use the smaller one and add to factor
 
 """
 
-
-
-
-
- 
-
-
 def solution(n):
     x = int(n)
     count = 0

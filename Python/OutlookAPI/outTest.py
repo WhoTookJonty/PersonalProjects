@@ -23,9 +23,9 @@ schedule = account.schedule()
 calendar = schedule.get_default_calendar()
 #events = calendar.get_events(include_recurring=False) 
 
-q = calendar.new_query('start').greater_equal(dt.datetime(2023, 8, 10))
-q.chain('and').on_attribute('end').less_equal(dt.datetime(2024, 2, 3))
-events = calendar.get_events(limit=500, query=q, include_recurring=True) 
+q = calendar.new_query('start').greater_equal(dt.datetime(2024, 1, 1))
+q.chain('and').on_attribute('end').less_equal(dt.datetime(2024, 2, 24))
+events = calendar.get_events(limit=500, query=q, include_recurring=True)
 
 for event in events:
     eventStr = str(event)
@@ -33,3 +33,5 @@ for event in events:
         "ignore"
     else:
         print(event)
+        print(" ---------- ")
+        print(event.attendees)

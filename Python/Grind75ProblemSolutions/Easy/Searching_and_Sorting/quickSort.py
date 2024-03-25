@@ -21,19 +21,19 @@ def partition(arr, left, right):
     l = left
     r = right
 
-    print("Partitiion pivot = ", pivot)
-    print("Partition Left: ", l)
-    print("Partition Right: ", r)
+    print("Partition pivot = ", pivot)
+    print("Partition l: ", l)
+    print("Partition r: ", r)
 
     while l <= r: #once left is greater than right pointer, we have finished and can return
 
         while arr[l] < pivot: #here we are creating the left partition
             l += 1
-            print("partition l is now: ", l)
+            print("new l is now: ", l)
 
         while arr[r] > pivot: #here we are creating the right partition 
             r -= 1
-            print("partition r is now: ", r)
+            print("new r is now: ", r)
 
         if l <= r: #if the left pointer is larger than the pivot AND the right is less than pivot, swap elements.             
             swap(arr, l, r)
@@ -54,12 +54,15 @@ def quicksort(arr, left, right):
         #elements smaller than it are on the left
         #and elements larger than it are on the right
         pivotIndex = partition(arr, left, right)
-        print("Quicksort, pivotIndex = " , pivotIndex)
+        print("pivotIndex: " , pivotIndex)
 
         if left < pivotIndex - 1:
+            print("here1")
+            print("left: ", left)
             quicksort(arr, left, pivotIndex - 1)
         
         if pivotIndex < right:
+            print("here2")
             quicksort(arr, pivotIndex, right)
     
     return arr
@@ -72,6 +75,8 @@ if __name__ == "__main__":
     arr = [10, 7, 8, 9, 1, 5]
     N = len(arr)
     quicksort(arr, 0, N-1)
+
+   
 
     print("Sorted array:")
     for x in arr:
